@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from core.sources import run as sources_run
 from core.debate import run as debate_run
 from core.question import run as question_run
+from core.fight import run as fight_run
 
 load_dotenv()
 
@@ -92,6 +93,53 @@ async def question(
             f"Error: {str(e)}"
         )
 
+@tree.command(
+    name="fight",
+    description="Generate a stick figure debate script"
+)
+async def fight(
+    interaction: discord.Interaction,
+    headline: str
+):
+
+    await interaction.response.defer(thinking=True)
+
+    try:
+
+        result = fight_run(headline)
+
+        output = []
+
+        output.append(f"🎬 **{result['title']}**\n")
+
+        for fighter in result["fighters"]:
+            output.append(
+                f"**{fighter['name']}**: {fighter['stance']}"
+            )
+
+        output.append("")
+
+        for line in result["dialogue"]:
+            output.append(
+                f"**{line['speaker']}:** {line['line']}"
+            )
+
+        output.append("")
+        output.append(
+            f"❓ {result['final_question']}"
+        )
+
+        message = "\n".join(output)
+
+        if len(message) > 1900:
+            message = message[:1900]
+
+        await interaction.followup.send(message)
+
+    except Exception as e:
+        await interaction.followup.send(
+            f"Error generating fight: {e}"
+        )
 
 @client.event
 async def on_ready():
